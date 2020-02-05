@@ -3,71 +3,84 @@
 
 #include <WiFi.h>
 #include <WebSocketsServer.h>
-const char* ssid = "Scratch";
-const char* password = "raspberrypi97";
+
+const char* ssid = "tegas_2.4ghz@unifi";
+const char* password = "tegasfeb2012";
+
 const char LOKI[]="S1";
 const char LOKI2[]="S2";
 const char LOKI3[]="S3";
 const char LOKI4[]="S4";
 const char LOKI5[]="S5";
 String str;
+String outCondition = "";
 // Globals
 
 WebSocketsServer webSocket = WebSocketsServer(80);
-// Called when receiving any WebSocket message
-void onWebSocketEvent(uint8_t num,WStype_t type,uint8_t * payload,size_t length)
-    {
- // Figure out the type of WebSocket event
-  switch(type){
- // Client has disconnected
-    case WStype_DISCONNECTED:
-      Serial.printf("[%u] Disconnected!\n", num);
-      break;
-    // New client has connected
-    case WStype_CONNECTED:
-      {
-        IPAddress ip = webSocket.remoteIP(num);
-        Serial.printf("[%u] Connection from ", num);
-        Serial.println(ip.toString());
-      }
-      break;
 
-    case WStype_TEXT:   // This is where the input from flutter are handled.....
-      Serial.printf("[%u] Text: %s\n", num, payload);
-      str=(char*)payload;
-      Serial.printf("This is the string that we convert: %s",str);
+
+void onWebSocketEvent(uint8_t num,WStype_t type,uint8_t * payload,size_t length){   // Called when receiving any WebSocket message
+  switch(type){   // Figure out the type of WebSocket event
+    
+    case WStype_DISCONNECTED:{   // Client has disconnected
+      Serial.printf("[%u] Disconnected!\n", num);
+    }
+    break;
+    
+    case WStype_CONNECTED:{   // New client has connected
+      IPAddress ip = webSocket.remoteIP(num);
+      Serial.printf("[%u] Connection from ", num);
+      Serial.println(ip.toString());
+    }
+    break;
+
+    
+    case WStype_TEXT:{  // This is where the input from flutter are handled.....
+      outCondition = "";
+      //Serial.printf("[%u] Text: %s\n", num, payload);
       
-//   if (strcmp((const char *)payload, LOKI) == 0)
-//      {
-//        Serial.println("GOT IT");// handle S1
-//      }
-//   else
-    if(str=="S1")
-   {
-    digitalWrite(2,HIGH);
-    Serial.println(" We got string conversion to work");
-   }
-   else  if(str=="S2")
-   {
-    digitalWrite(2,LOW);
-    Serial.println(" We got string conversion to work");
-   }
-   else  if(str=="S3")
-   {
-    Serial.println(" We got string conversion to work S3");
-   }
-   else  if(str=="S4")
-   {
-    Serial.println(" We got string conversion to work S4");
-   }
-   else  if(str=="S5")
-   {
-    Serial.println(" We got string conversion to work S5");
-   }
-  
-      break;
-//webSocket.sendTXT(num, payload);
-     
+      str=(char*)payload;
+      Serial.println(str);
+      //Serial.println("apa-apa");
+      
+      if(str=="S1.0"){
+        digitalWrite(2,LOW);
+      }
+      else if(str == "S1.1"){
+        digitalWrite(2,HIGH);
+      }
+      else  if(str=="S2.0"){
+        digitalWrite(21, LOW);
+      }
+      else  if(str=="S2.1"){
+        digitalWrite(21, HIGH);
+      }
+      else  if(str=="S4"){
+        Serial.println("S4");
+      }
+      else  if(str=="S5"){
+        Serial.println("S5");
+      }
+
+      if(str == "check"){ 
+        if(digitalRead(2) == HIGH){
+          outCondition += "LED1onabc";
+        }
+        else if(digitalRead(2) == LOW){
+          outCondition += "LED1offabc";
+        }
+        if(digitalRead(21) == HIGH){
+          outCondition += "LED2on";
+        }
+        else if(digitalRead(21) == LOW){
+          outCondition += "LED2off";
+        }
+        webSocket.sendTXT(num, outCondition);
+        delay(100);
+      }
+    }
+    break;
+   
  
     // For everything else: do nothing
     case WStype_BIN:
@@ -83,20 +96,22 @@ void onWebSocketEvent(uint8_t num,WStype_t type,uint8_t * payload,size_t length)
  
 void setup() {
   pinMode(2,OUTPUT);
+  pinMode(21,OUTPUT);
+  
   Serial.begin(115200);
+  
   Serial.println("Connecting");
   WiFi.begin(ssid, password);
-  while ( WiFi.status() != WL_CONNECTED )
-        {
-          delay(500);
-          Serial.print(".");
-        }
-  // Print our IP address
+  while( WiFi.status() != WL_CONNECTED ){
+    delay(500);
+    Serial.print(".");
+  }
+  
   Serial.println("Connected!");
   Serial.print("My IP address: ");
-  Serial.println(WiFi.localIP());
-  // Start WebSocket server and assign callback
-  webSocket.begin();
+  Serial.println(WiFi.localIP());   // Print our IP address
+  
+  webSocket.begin();    // Start WebSocket server and assign callback
   webSocket.onEvent(onWebSocketEvent);
 }
  
