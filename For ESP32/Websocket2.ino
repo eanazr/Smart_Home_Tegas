@@ -4,8 +4,8 @@
 #include <WiFi.h>
 #include <WebSocketsServer.h>
 
-const char* ssid = "tegas_2.4ghz@unifi";
-const char* password = "tegasfeb2012";
+const char* ssid = "xxxxxxxxx";
+const char* password = "xxxxxxx";
 
 const char LOKI[]="S1";
 const char LOKI2[]="S2";
